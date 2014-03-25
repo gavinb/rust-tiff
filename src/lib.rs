@@ -212,6 +212,7 @@ fn validateRGBImage() {
 //----------------------------------------------------------------------------
 
 pub trait SeekableReader: Seek + Reader {}
+impl<T: Seek + Reader> SeekableReader for T {}
 
 pub fn decodeTag(value: u16) -> Option<TIFFTag> {
     match value {

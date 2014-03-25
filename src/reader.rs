@@ -18,7 +18,7 @@ use std::io::fs::File;
 use std::vec_ng::Vec;
 use std::option::{Option, Some, None};
 
-use {ByteOrder, ByteOrderBigEndian, ByteOrderLittleEndian, HeaderMagic, HeaderMagicLittleEndian, HeaderMagicBigEndian, TIFFHeader, IFD, IFDEntry, decodeTag, decodeTagType};
+use {ByteOrder, ByteOrderBigEndian, ByteOrderLittleEndian, HeaderMagic, HeaderMagicLittleEndian, HeaderMagicBigEndian, TIFFHeader, IFD, IFDEntry, decodeTag, decodeTagType, SeekableReader};
 
 pub struct TIFFReader;
 
@@ -29,11 +29,11 @@ impl TIFFReader {
         let filepath = Path::new(filename);
         let mut reader = File::open(&filepath);
 
-//        self.read(&reader.unwrap())
-//    }
-//
-//    fn read(&self, reader: &SeekableReader) -> IoResult<u32> {
-//
+        self.read(&mut reader)
+    }
+
+    pub fn read(&self, reader: &mut SeekableReader) -> IoResult<u32> {
+
         // @todo Ensure file is >= min size
 
         // Read and validate ByteOrder
@@ -78,40 +78,45 @@ impl TIFFReader {
         try!(reader.seek(ifdOffsetField as i64, SeekSet));
         println!("IFD offset: {}", ifdOffsetField);
 
-//        self.readIFD(reader);
-//
-//        Ok(42)
-//    }
-//
-//    fn readIFD(&self, reader: &mut SeekableReader) -> IoResult<~IFD> {
-//
+        self.readIFD(reader);
+
+        Ok(42)
+    }
+
+    fn readIFD(&self, reader: &mut SeekableReader) -> IoResult<~IFD> {
+
         let entryCount = try!(reader.read_le_u16());
 
-        let ifd = ~IFD { count: entryCount, entries: Vec::with_capacity(entryCount as uint) };
+        let mut ifd = ~IFD { count: entryCount, entries: Vec::with_capacity(entryCount as uint) };
 
         println!("IFD entry count: {}", entryCount);
 
-        for entryNumber in range(0, entryCount) {
-
-            let tagValue = try!(reader.read_le_u16());
-            let typValue = try!(reader.read_le_u16());
-            let countValue = try!(reader.read_le_u32());
-            let valueOffsetValue = try!(reader.read_le_u32());
-
-            let tag = decodeTag(tagValue).expect(format!("Invalid tag {:x}", tagValue));
-            let typ = decodeTagType(typValue).expect(format!("Invalid tag type {:x}", typValue));
-
-            let e0 = IFDEntry {
-                tag: tag,
-                typ: typ,
-                count: countValue,
-                valueOffset: valueOffsetValue,
-            };
-
-            println!("IFD[{}] {} {} {:x} {}", entryNumber, e0.tag, e0.typ, e0.count, e0.valueOffset);
+        for entryNumber in range(0, entryCount as uint) {
+            ifd.entries.push(*self.readTag(entryNumber, reader).unwrap());
         }
 
-        Ok(42)
+        Ok(ifd)
+    }
+
+    fn readTag(&self, entryNumber: uint, reader: &mut SeekableReader) -> IoResult<~IFDEntry> {
+
+        let tagValue = try!(reader.read_le_u16());
+        let typValue = try!(reader.read_le_u16());
+        let countValue = try!(reader.read_le_u32());
+        let valueOffsetValue = try!(reader.read_le_u32());
+
+        let tag = decodeTag(tagValue).expect(format!("Invalid tag {:x}", tagValue));
+        let typ = decodeTagType(typValue).expect(format!("Invalid tag type {:x}", typValue));
+
+        let e0 = ~IFDEntry {
+            tag: tag,
+            typ: typ,
+            count: countValue,
+            valueOffset: valueOffsetValue,
+        };
+
+        println!("IFD[{}] {} {} {:x} {}", entryNumber, e0.tag, e0.typ, e0.count, e0.valueOffset);
+        Ok(e0)
     }
 }
 
