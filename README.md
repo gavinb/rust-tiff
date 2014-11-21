@@ -37,9 +37,11 @@ work identically on all platforms supported by the Rust toolchain.
 Building
 --------
 
-Currently, `make` is used to perform a simple build.  Hopefully the new
-`rustpkg` support will soon be ready, and this project will be converted
-once practicable.
+This package is available as a crate on the new
+[crates.io](http://crates.io) repository.  To use this package, simply
+add the following line to your `[dependencies]` section in `Cargo.toml`:
+
+    rust-tiff = "0.0.5"
 
 Acknowledgements
 ----------------
