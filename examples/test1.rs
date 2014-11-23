@@ -11,9 +11,7 @@
 //
 //============================================================================
 
-#[license = "MIT"];
-
-extern crate tiff;
+extern crate "rust-tiff" as tiff;
 
 use std::os;
 
@@ -24,7 +22,7 @@ use tiff::reader::TIFFReader;
 
 fn main() {
     let tiffReader = TIFFReader;
-    match tiffReader.load(os::args()[1]) {
+    match tiffReader.load(os::args()[1].as_slice()) {
         Ok(x) => println!("Read tiff {}", x),
         Err(e) => println!("File I/O Error: {}", e),
     }

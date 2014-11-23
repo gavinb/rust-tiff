@@ -11,18 +11,7 @@
 //
 //============================================================================
 
-#[crate_id = "tiff#0.1"];
-#[desc = "TIFF Support"];
-#[crate_type = "rlib"];
-#[crate_type = "dylib"];
-#[license = "MIT"];
-
-#[allow(dead_code)];
-
-//use std::io::{IoResult, IoError, Reader, Seek, SeekCur, SeekSet};
-//use std::io::fs::File;
-use std::vec_ng::Vec;
-//use std::option::{Option, Some, None};
+#![allow(dead_code)]
 
 pub mod reader;
 //mod writer;
@@ -95,16 +84,16 @@ pub enum ResolutionUnit {
 // Structs
 
 pub struct TIFFHeader {
-    byteOrder: ByteOrder,
+    byte_order: ByteOrder,
     magic: HeaderMagic,
-    ifdOffset: LONG,
+    ifd_offset: LONG,
 }
 
 pub struct IFDEntry {
     tag: TIFFTag,
     typ: TagType,
     count: LONG,
-    valueOffset: LONG,
+    value_offset: LONG,
 }
 
 pub struct IFD {
@@ -187,14 +176,14 @@ pub enum TIFFTag {
 //----------------------------------------------------------------------------
 // Default Values
 
-static PhotometricInterpretationShortDefault: SHORT = 1;
-static PhotometricInterpretationLongDefault: LONG = 1;
+static PHOTOMETRIC_INTERPRETATION_SHORT_DEFAULT: SHORT = 1;
+static PHOTOMETRIC_INTERPRETATION_LONG_DEFAULT: LONG = 1;
 
 //----------------------------------------------------------------------------
 
 // Section 6: Required Fields for RGB Images
 
-fn validateRGBImage() {
+fn validate_rgb_image() {
     // ImageWidth
     // ImageLength
     // BitsPerSample
@@ -214,82 +203,82 @@ fn validateRGBImage() {
 pub trait SeekableReader: Seek + Reader {}
 impl<T: Seek + Reader> SeekableReader for T {}
 
-pub fn decodeTag(value: u16) -> Option<TIFFTag> {
+pub fn decode_tag(value: u16) -> Option<TIFFTag> {
     match value {
-        0x013b => Some(ArtistTag),
-        0x0102 => Some(BitsPerSampleTag),
-        0x0109 => Some(CellLengthTag),
-        0x0108 => Some(CellWidthTag),
-        0x0140 => Some(ColorMapTag),
-        0x0103 => Some(CompressionTag),
-        0x8298 => Some(CopyrightTag),
-        0x0132 => Some(DateTimeTag),
-        0x0152 => Some(ExtraSamplesTag),
-        0x010a => Some(FillOrderTag),
-        0x0121 => Some(FreeByteCountsTag),
-        0x0120 => Some(FreeOffsetsTag),
-        0x0123 => Some(GrayResponseCurveTag),
-        0x0122 => Some(GrayResponseUnitTag),
-        0x013c => Some(HostComputerTag),
-        0x010e => Some(ImageDescriptionTag),
-        0x0101 => Some(ImageLengthTag),
-        0x0100 => Some(ImageWidthTag),
-        0x010f => Some(MakeTag),
-        0x0119 => Some(MaxSampleValueTag),
-        0x0118 => Some(MinSampleValueTag),
-        0x0110 => Some(ModelTag),
-        0x00fe => Some(NewSubfileTypeTag),
-        0x0112 => Some(OrientationTag),
-        0x0106 => Some(PhotometricInterpretationTag),
-        0x011c => Some(PlanarConfigurationTag),
-        0x0128 => Some(ResolutionUnitTag),
-        0x0116 => Some(RowsPerStripTag),
-        0x0115 => Some(SamplesPerPixel),
-        0x0131 => Some(SoftwareTag),
-        0x0117 => Some(StripByteCountsTag),
-        0x0111 => Some(StripOffsetsTag),
-        0x00ff => Some(SubfileTypeTag),
-        0x0107 => Some(ThresholdingTag),
-        0x011a => Some(XResolutionTag),
-        0x011b => Some(YResolutionTag),
+        0x013b => Some(TIFFTag::ArtistTag),
+        0x0102 => Some(TIFFTag::BitsPerSampleTag),
+        0x0109 => Some(TIFFTag::CellLengthTag),
+        0x0108 => Some(TIFFTag::CellWidthTag),
+        0x0140 => Some(TIFFTag::ColorMapTag),
+        0x0103 => Some(TIFFTag::CompressionTag),
+        0x8298 => Some(TIFFTag::CopyrightTag),
+        0x0132 => Some(TIFFTag::DateTimeTag),
+        0x0152 => Some(TIFFTag::ExtraSamplesTag),
+        0x010a => Some(TIFFTag::FillOrderTag),
+        0x0121 => Some(TIFFTag::FreeByteCountsTag),
+        0x0120 => Some(TIFFTag::FreeOffsetsTag),
+        0x0123 => Some(TIFFTag::GrayResponseCurveTag),
+        0x0122 => Some(TIFFTag::GrayResponseUnitTag),
+        0x013c => Some(TIFFTag::HostComputerTag),
+        0x010e => Some(TIFFTag::ImageDescriptionTag),
+        0x0101 => Some(TIFFTag::ImageLengthTag),
+        0x0100 => Some(TIFFTag::ImageWidthTag),
+        0x010f => Some(TIFFTag::MakeTag),
+        0x0119 => Some(TIFFTag::MaxSampleValueTag),
+        0x0118 => Some(TIFFTag::MinSampleValueTag),
+        0x0110 => Some(TIFFTag::ModelTag),
+        0x00fe => Some(TIFFTag::NewSubfileTypeTag),
+        0x0112 => Some(TIFFTag::OrientationTag),
+        0x0106 => Some(TIFFTag::PhotometricInterpretationTag),
+        0x011c => Some(TIFFTag::PlanarConfigurationTag),
+        0x0128 => Some(TIFFTag::ResolutionUnitTag),
+        0x0116 => Some(TIFFTag::RowsPerStripTag),
+        0x0115 => Some(TIFFTag::SamplesPerPixel),
+        0x0131 => Some(TIFFTag::SoftwareTag),
+        0x0117 => Some(TIFFTag::StripByteCountsTag),
+        0x0111 => Some(TIFFTag::StripOffsetsTag),
+        0x00ff => Some(TIFFTag::SubfileTypeTag),
+        0x0107 => Some(TIFFTag::ThresholdingTag),
+        0x011a => Some(TIFFTag::XResolutionTag),
+        0x011b => Some(TIFFTag::YResolutionTag),
 
-        0x014a => Some(SubIFDsTag),
-        0x015b => Some(JPEGTablesTag),
-        0x828d => Some(CFARepeatPatternDimTag),
-        0x828f => Some(BatteryLevelTag),
-        0x83BB => Some(IPTCTag),
-        0x8773 => Some(InterColorProfileTag),
-        0x8829 => Some(InterlaceTag),
-        0x882a => Some(TimeZoneOffsetTag),
-        0x882b => Some(SelfTimerModeTag),
-        0x920d => Some(NoiseTag),
-        0x9211 => Some(ImageNumberTag),
-        0x9212 => Some(SecurityClassificationTag),
-        0x9213 => Some(ImageHistoryTag),
-        0x9216 => Some(EPStandardIdTag),
+        0x014a => Some(TIFFTag::SubIFDsTag),
+        0x015b => Some(TIFFTag::JPEGTablesTag),
+        0x828d => Some(TIFFTag::CFARepeatPatternDimTag),
+        0x828f => Some(TIFFTag::BatteryLevelTag),
+        0x83BB => Some(TIFFTag::IPTCTag),
+        0x8773 => Some(TIFFTag::InterColorProfileTag),
+        0x8829 => Some(TIFFTag::InterlaceTag),
+        0x882a => Some(TIFFTag::TimeZoneOffsetTag),
+        0x882b => Some(TIFFTag::SelfTimerModeTag),
+        0x920d => Some(TIFFTag::NoiseTag),
+        0x9211 => Some(TIFFTag::ImageNumberTag),
+        0x9212 => Some(TIFFTag::SecurityClassificationTag),
+        0x9213 => Some(TIFFTag::ImageHistoryTag),
+        0x9216 => Some(TIFFTag::EPStandardIdTag),
 
-        0x02bc => Some(XMPTag),
-        0x8649 => Some(PhotoshopTag),
-        0x8769 => Some(EXIFTag),
+        0x02bc => Some(TIFFTag::XMPTag),
+        0x8649 => Some(TIFFTag::PhotoshopTag),
+        0x8769 => Some(TIFFTag::EXIFTag),
         _ => None,
     }
 }
 
-pub fn decodeTagType(typ: u16) -> Option<TagType> {
+pub fn decode_tag_type(typ: u16) -> Option<TagType> {
 
     match typ {
-        1 => Some(ByteTag),
-        2 => Some(ASCIITag),
-        3 => Some(ShortTag),
-        4 => Some(LongTag),
-        5 => Some(RationalTag),
-        6 => Some(SByteTag),
-        7 => Some(UndefinedTag),
-        8 => Some(SShortTag),
-        9 => Some(SLongTag),
-        10 => Some(SRationalTag),
-        11 => Some(FLoatTag),
-        12 => Some(DoubleTag),
+        1 => Some(TagType::ByteTag),
+        2 => Some(TagType::ASCIITag),
+        3 => Some(TagType::ShortTag),
+        4 => Some(TagType::LongTag),
+        5 => Some(TagType::RationalTag),
+        6 => Some(TagType::SByteTag),
+        7 => Some(TagType::UndefinedTag),
+        8 => Some(TagType::SShortTag),
+        9 => Some(TagType::SLongTag),
+        10 => Some(TagType::SRationalTag),
+        11 => Some(TagType::FLoatTag),
+        12 => Some(TagType::DoubleTag),
         _ => None,
     }
 }

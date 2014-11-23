@@ -11,14 +11,10 @@
 //
 //============================================================================
 
-//#[feature(globs)];
-
-use std::io::{IoResult, IoError, Reader, Seek, SeekCur, SeekSet};
+use std::io::{IoResult, IoError, IoErrorKind, Reader, Seek, SeekSet};
 use std::io::fs::File;
-use std::vec_ng::Vec;
-use std::option::{Option, Some, None};
 
-use {ByteOrder, ByteOrderBigEndian, ByteOrderLittleEndian, HeaderMagic, HeaderMagicLittleEndian, HeaderMagicBigEndian, TIFFHeader, IFD, IFDEntry, decodeTag, decodeTagType, SeekableReader};
+use {ByteOrder, HeaderMagic, TIFFHeader, IFD, IFDEntry, decode_tag, decode_tag_type, SeekableReader};
 
 pub struct TIFFReader;
 
@@ -38,84 +34,93 @@ impl TIFFReader {
 
         // Read and validate ByteOrder
 
-        let byteOrderField = try!(reader.read_le_u16());
-        let byteOrder: ByteOrder;
+        let byte_order_field = try!(reader.read_le_u16());
+        let byte_order: ByteOrder;
 
-        if byteOrderField == ByteOrderLittleEndian as u16 {
-            byteOrder = ByteOrderLittleEndian;
-        } else if byteOrderField == ByteOrderBigEndian as u16 {
-            byteOrder = ByteOrderBigEndian;
+        if byte_order_field == ByteOrder::ByteOrderLittleEndian as u16 {
+            byte_order = ByteOrder::ByteOrderLittleEndian;
+        } else if byte_order_field == ByteOrder::ByteOrderBigEndian as u16 {
+            byte_order = ByteOrder::ByteOrderBigEndian;
         } else {
-            fail!("Invalid byteOrder");
+            return Err(IoError {
+                kind: IoErrorKind::OtherIoError,
+                detail: Some(String::from_str("Invalid byte order in header")),
+                desc: "",
+            });
         }
 
         // Read and validate HeaderMagic
 
-        let magicField = try!(reader.read_le_u16());
+        let magic_field = try!(reader.read_le_u16());
         let magic: HeaderMagic;
 
-        if magicField == HeaderMagicLittleEndian as u16 {
-            magic = HeaderMagicLittleEndian;
+        if magic_field == HeaderMagic::HeaderMagicLittleEndian as u16 {
+            magic = HeaderMagic::HeaderMagicLittleEndian;
         }
-        else if magicField == HeaderMagicBigEndian as u16 {
-            magic = HeaderMagicBigEndian;
+        else if magic_field == HeaderMagic::HeaderMagicBigEndian as u16 {
+            magic = HeaderMagic::HeaderMagicBigEndian;
         } else {
-            fail!("Invalid magic");
+            return Err(IoError {
+                kind: IoErrorKind::OtherIoError,
+                detail: Some(String::from_str("Invalid magic number in header")),
+                desc: "",
+            });
         }
 
         // Read offset to first IFD
 
-        let ifdOffsetField = try!(reader.read_le_u32());
+        let ifd_offset_field = try!(reader.read_le_u32());
 
         // Assemble validated header
 
         let header = TIFFHeader {
-            byteOrder: byteOrder,
+            byte_order: byte_order,
             magic: magic,
-            ifdOffset: ifdOffsetField,
+            ifd_offset: ifd_offset_field,
         };
 
-        try!(reader.seek(ifdOffsetField as i64, SeekSet));
-        println!("IFD offset: {}", ifdOffsetField);
+        try!(reader.seek(ifd_offset_field as i64, SeekSet));
+        println!("IFD offset: {}", ifd_offset_field);
 
-        self.readIFD(reader);
+        try!(self.read_IFD(reader));
 
         Ok(42)
     }
 
-    fn readIFD(&self, reader: &mut SeekableReader) -> IoResult<~IFD> {
+    #[allow(non_snake_case)]
+    fn read_IFD(&self, reader: &mut SeekableReader) -> IoResult<Box<IFD>> {
 
-        let entryCount = try!(reader.read_le_u16());
+        let entry_count = try!(reader.read_le_u16());
 
-        let mut ifd = ~IFD { count: entryCount, entries: Vec::with_capacity(entryCount as uint) };
+        let mut ifd = box IFD { count: entry_count, entries: Vec::with_capacity(entry_count as uint) };
 
-        println!("IFD entry count: {}", entryCount);
+        println!("IFD entry count: {}", entry_count);
 
-        for entryNumber in range(0, entryCount as uint) {
-            ifd.entries.push(*self.readTag(entryNumber, reader).unwrap());
+        for entry_number in range(0, entry_count as uint) {
+            ifd.entries.push(*self.read_tag(entry_number, reader).unwrap());
         }
 
         Ok(ifd)
     }
 
-    fn readTag(&self, entryNumber: uint, reader: &mut SeekableReader) -> IoResult<~IFDEntry> {
+    fn read_tag(&self, entry_number: uint, reader: &mut SeekableReader) -> IoResult<Box<IFDEntry>> {
 
-        let tagValue = try!(reader.read_le_u16());
-        let typValue = try!(reader.read_le_u16());
-        let countValue = try!(reader.read_le_u32());
-        let valueOffsetValue = try!(reader.read_le_u32());
+        let tag_value = try!(reader.read_le_u16());
+        let typ_value = try!(reader.read_le_u16());
+        let count_value = try!(reader.read_le_u32());
+        let value_offset_value = try!(reader.read_le_u32());
 
-        let tag = decodeTag(tagValue).expect(format!("Invalid tag {:x}", tagValue));
-        let typ = decodeTagType(typValue).expect(format!("Invalid tag type {:x}", typValue));
+        let tag = decode_tag(tag_value).expect(format!("Invalid tag {:x}", tag_value).as_slice());
+        let typ = decode_tag_type(typ_value).expect(format!("Invalid tag type {:x}", typ_value).as_slice());
 
-        let e0 = ~IFDEntry {
+        let e0 = box IFDEntry {
             tag: tag,
             typ: typ,
-            count: countValue,
-            valueOffset: valueOffsetValue,
+            count: count_value,
+            value_offset: value_offset_value,
         };
 
-        println!("IFD[{}] {} {} {:x} {}", entryNumber, e0.tag, e0.typ, e0.count, e0.valueOffset);
+        println!("IFD[{}] {} {} {:x} {}", entry_number, e0.tag, e0.typ, e0.count, e0.value_offset);
         Ok(e0)
     }
 }
