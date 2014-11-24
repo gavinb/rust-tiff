@@ -99,9 +99,9 @@ pub enum ResolutionUnit {
 
 #[deriving(Show)]
 pub struct TIFFHeader {
-    byte_order: ByteOrder,
-    magic: HeaderMagic,
-    ifd_offset: LONG,
+    pub byte_order: ByteOrder,
+    pub magic: HeaderMagic,
+    pub ifd_offset: LONG,
 }
 
 pub struct IFDEntry {

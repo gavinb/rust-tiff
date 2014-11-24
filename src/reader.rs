@@ -48,10 +48,15 @@ impl TIFFReader {
                 desc: "",
             });
         }
+        println!("byte_order {}", byte_order);
 
         // Read and validate HeaderMagic
 
-        let magic_field = try!(reader.read_le_u16());
+        let magic_field = match byte_order {
+            ByteOrder::LittleEndian => try!(reader.read_le_u16()),
+            ByteOrder::BigEndian => try!(reader.read_be_u16()),
+        };
+
         let magic: HeaderMagic;
 
         if magic_field == HeaderMagic::LittleEndian as u16 {
@@ -69,7 +74,10 @@ impl TIFFReader {
 
         // Read offset to first IFD
 
-        let ifd_offset_field = try!(reader.read_le_u32());
+        let ifd_offset_field = match byte_order {
+            ByteOrder::LittleEndian => try!(reader.read_le_u32()),
+            ByteOrder::BigEndian => try!(reader.read_be_u32()),
+        };
 
         // Assemble validated header
 
@@ -90,7 +98,9 @@ impl TIFFReader {
     #[allow(non_snake_case)]
     fn read_IFD(&self, reader: &mut SeekableReader) -> IoResult<Box<IFD>> {
 
-        let entry_count = try!(reader.read_le_u16());
+        let entry_count = try!(reader.read_be_u16());
+
+        println!("IFD entry count: {}", entry_count);
 
         let mut ifd = box IFD { count: entry_count, entries: Vec::with_capacity(entry_count as uint) };
 
