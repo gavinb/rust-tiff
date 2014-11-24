@@ -36,14 +36,14 @@ pub type DOUBLE = f64;
 
 #[repr(u16)]
 pub enum ByteOrder {
-    ByteOrderLittleEndian = 0x4949,
-    ByteOrderBigEndian = 0x4d4d,
+    LittleEndian = 0x4949,
+    BigEndian = 0x4d4d,
 }
 
 #[repr(u16)]
 pub enum HeaderMagic {
-    HeaderMagicLittleEndian = 0x002a,
-    HeaderMagicBigEndian = 0x2a00,
+    LittleEndian = 0x002a,
+    BigEndian = 0x2a00,
 }
 
 #[repr(u16)]
@@ -64,20 +64,20 @@ pub enum TagType {
 }
 
 pub enum PhotometricInterpretation {
-    PhotometricInterpretationWhiteIsZero = 0,
-    PhotometricInterpretationBlackIsZero = 1,
+    WhiteIsZero = 0,
+    BlackIsZero = 1,
 }
 
 pub enum Compression {
-    CompressionNone = 1,
-    CompressionHuffman = 2,
-    CompressionPackBits = 32773,
+    None = 1,
+    Huffman = 2,
+    PackBits = 32773,
 }
 
 pub enum ResolutionUnit {
-    ResolutionUnitNone = 1,
-    ResolutionUnitInch = 2,
-    ResolutionUnitCentimetre = 3,
+    None = 1,
+    Inch = 2,
+    Centimetre = 3,
 }
 
 //----------------------------------------------------------------------------

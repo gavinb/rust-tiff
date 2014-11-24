@@ -37,10 +37,10 @@ impl TIFFReader {
         let byte_order_field = try!(reader.read_le_u16());
         let byte_order: ByteOrder;
 
-        if byte_order_field == ByteOrder::ByteOrderLittleEndian as u16 {
-            byte_order = ByteOrder::ByteOrderLittleEndian;
-        } else if byte_order_field == ByteOrder::ByteOrderBigEndian as u16 {
-            byte_order = ByteOrder::ByteOrderBigEndian;
+        if byte_order_field == ByteOrder::LittleEndian as u16 {
+            byte_order = ByteOrder::LittleEndian;
+        } else if byte_order_field == ByteOrder::BigEndian as u16 {
+            byte_order = ByteOrder::BigEndian;
         } else {
             return Err(IoError {
                 kind: IoErrorKind::OtherIoError,
@@ -54,11 +54,11 @@ impl TIFFReader {
         let magic_field = try!(reader.read_le_u16());
         let magic: HeaderMagic;
 
-        if magic_field == HeaderMagic::HeaderMagicLittleEndian as u16 {
-            magic = HeaderMagic::HeaderMagicLittleEndian;
+        if magic_field == HeaderMagic::LittleEndian as u16 {
+            magic = HeaderMagic::LittleEndian;
         }
-        else if magic_field == HeaderMagic::HeaderMagicBigEndian as u16 {
-            magic = HeaderMagic::HeaderMagicBigEndian;
+        else if magic_field == HeaderMagic::BigEndian as u16 {
+            magic = HeaderMagic::BigEndian;
         } else {
             return Err(IoError {
                 kind: IoErrorKind::OtherIoError,
