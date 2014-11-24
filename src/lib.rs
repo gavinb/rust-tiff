@@ -13,8 +13,14 @@
 
 #![allow(dead_code)]
 
+//----------------------------------------------------------------------------
+// Reexports
+
+pub use reader::TIFFReader;
+
 pub mod reader;
 //mod writer;
+
 
 //----------------------------------------------------------------------------
 // Types
@@ -35,12 +41,14 @@ pub type DOUBLE = f64;
 // Enums
 
 #[repr(u16)]
+#[deriving(Show)]
 pub enum ByteOrder {
     LittleEndian = 0x4949,
     BigEndian = 0x4d4d,
 }
 
 #[repr(u16)]
+#[deriving(Show)]
 pub enum HeaderMagic {
     LittleEndian = 0x002a,
     BigEndian = 0x2a00,
@@ -63,17 +71,23 @@ pub enum TagType {
     DoubleTag = 12,
 }
 
+#[repr(u16)]
+#[deriving(Show)]
 pub enum PhotometricInterpretation {
     WhiteIsZero = 0,
     BlackIsZero = 1,
 }
 
+#[repr(u16)]
+#[deriving(Show)]
 pub enum Compression {
     None = 1,
     Huffman = 2,
     PackBits = 32773,
 }
 
+#[repr(u16)]
+#[deriving(Show)]
 pub enum ResolutionUnit {
     None = 1,
     Inch = 2,
@@ -83,6 +97,7 @@ pub enum ResolutionUnit {
 //----------------------------------------------------------------------------
 // Structs
 
+#[deriving(Show)]
 pub struct TIFFHeader {
     byte_order: ByteOrder,
     magic: HeaderMagic,

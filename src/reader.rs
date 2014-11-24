@@ -20,7 +20,7 @@ pub struct TIFFReader;
 
 impl TIFFReader {
 
-    pub fn load(&self, filename: &str) -> IoResult<u32> {
+    pub fn load(&self, filename: &str) -> IoResult<Box<TIFFHeader>> {
 
         let filepath = Path::new(filename);
         let mut reader = File::open(&filepath);
@@ -28,7 +28,7 @@ impl TIFFReader {
         self.read(&mut reader)
     }
 
-    pub fn read(&self, reader: &mut SeekableReader) -> IoResult<u32> {
+    pub fn read(&self, reader: &mut SeekableReader) -> IoResult<Box<TIFFHeader>> {
 
         // @todo Ensure file is >= min size
 
@@ -73,7 +73,7 @@ impl TIFFReader {
 
         // Assemble validated header
 
-        let header = TIFFHeader {
+        let header = box TIFFHeader {
             byte_order: byte_order,
             magic: magic,
             ifd_offset: ifd_offset_field,
@@ -84,7 +84,7 @@ impl TIFFReader {
 
         try!(self.read_IFD(reader));
 
-        Ok(42)
+        Ok(header)
     }
 
     #[allow(non_snake_case)]
@@ -122,12 +122,5 @@ impl TIFFReader {
 
         println!("IFD[{}] {} {} {:x} {}", entry_number, e0.tag, e0.typ, e0.count, e0.value_offset);
         Ok(e0)
-    }
-}
-
-#[cfg(test)]
-mod test {
-    #[test]
-    fn test_tiff() {
     }
 }
