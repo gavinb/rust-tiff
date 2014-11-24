@@ -1,0 +1,17 @@
+
+text_w320_h200_b8_cn_prgb.tiff:
+
+TIFF Directory at offset 0x8 (8)
+  Subfile Type: (0 = 0x0)
+  Image Width: 320 Image Length: 200
+  Resolution: 300, 300 pixels/inch
+  Bits/Sample: 8
+  Compression Scheme: None
+  Photometric Interpretation: RGB color
+  Orientation: row 0 top, col 0 lhs
+  Samples/Pixel: 3
+  Rows/Strip: 200
+  Planar Configuration: single image plane
+  Software: Adobe Photoshop CC 2014 (Macintosh)
+  DateTime: 2014:11:24 15:32:05
+
