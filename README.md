@@ -25,8 +25,7 @@ processing work.  Hopefully it is useful for you too!
 Status
 ------
 
-This library is highly experimental. Not only is it incomplete, but it is
-tracking the Rust `master` branch, which means it could break at any time.
+This library is highly experimental. It currently targets Rust 1.0.
 
 Platform Support
 ----------------
