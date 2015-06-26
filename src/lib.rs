@@ -21,6 +21,7 @@ pub use reader::TIFFReader;
 pub mod reader;
 //mod writer;
 
+use std::io::{Read, Seek};
 
 //----------------------------------------------------------------------------
 // Types
@@ -41,21 +42,21 @@ pub type DOUBLE = f64;
 // Enums
 
 #[repr(u16)]
-#[deriving(Show)]
+#[derive(Debug)]
 pub enum ByteOrder {
     LittleEndian = 0x4949,
     BigEndian = 0x4d4d,
 }
 
 #[repr(u16)]
-#[deriving(Show)]
+#[derive(Debug)]
 pub enum HeaderMagic {
     LittleEndian = 0x002a,
     BigEndian = 0x2a00,
 }
 
 #[repr(u16)]
-#[deriving(Show)]
+#[derive(Debug)]
 pub enum TagType {
     ByteTag = 1,
     ASCIITag = 2,
@@ -72,14 +73,14 @@ pub enum TagType {
 }
 
 #[repr(u16)]
-#[deriving(Show)]
+#[derive(Debug)]
 pub enum PhotometricInterpretation {
     WhiteIsZero = 0,
     BlackIsZero = 1,
 }
 
 #[repr(u16)]
-#[deriving(Show)]
+#[derive(Debug)]
 pub enum Compression {
     None = 1,
     Huffman = 2,
@@ -87,7 +88,7 @@ pub enum Compression {
 }
 
 #[repr(u16)]
-#[deriving(Show)]
+#[derive(Debug)]
 pub enum ResolutionUnit {
     None = 1,
     Inch = 2,
@@ -97,7 +98,7 @@ pub enum ResolutionUnit {
 //----------------------------------------------------------------------------
 // Structs
 
-#[deriving(Show)]
+#[derive(Debug)]
 pub struct TIFFHeader {
     pub byte_order: ByteOrder,
     pub magic: HeaderMagic,
@@ -120,7 +121,7 @@ pub struct IFD {
 // Baseline Tags
 
 #[repr(u16)]
-#[deriving(Show)]
+#[derive(Debug)]
 pub enum TIFFTag {
 
     // Baseline Tags
@@ -215,8 +216,8 @@ fn validate_rgb_image() {
 
 //----------------------------------------------------------------------------
 
-pub trait SeekableReader: Seek + Reader {}
-impl<T: Seek + Reader> SeekableReader for T {}
+pub trait SeekableReader: Seek + Read {}
+impl<T: Seek + Read> SeekableReader for T {}
 
 pub fn decode_tag(value: u16) -> Option<TIFFTag> {
     match value {
