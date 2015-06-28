@@ -3,3 +3,6 @@
 name = "rust-tiff"
 version = "0.0.1"
 authors = ["Gavin Baker <gavinb@antonym.org>"]
+
+[dependencies]
+byteorder = "*"

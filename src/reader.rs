@@ -15,6 +15,8 @@ use std::io::{Result, Error, ErrorKind, Read, Seek, SeekFrom};
 use std::path::Path;
 use std::fs::File;
 
+use byteorder::{ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
+
 use {ByteOrder, HeaderMagic, TIFFHeader, IFD, IFDEntry, decode_tag, decode_tag_type, SeekableReader};
 
 pub struct TIFFReader;
@@ -35,7 +37,7 @@ impl TIFFReader {
 
         // Read and validate ByteOrder
 
-        let byte_order_field = try!(reader.read_le_u16());
+        let byte_order_field = try!(reader.read_u16::<LittleEndian>());
         let byte_order: ByteOrder;
 
         if byte_order_field == ByteOrder::LittleEndian as u16 {
@@ -44,15 +46,15 @@ impl TIFFReader {
             byte_order = ByteOrder::BigEndian;
         } else {
             return Err(Error::new(ErrorKind::Other,
-                                  String::from_str("Invalid byte order in header")));
+                                  "Invalid byte order in header"));
         }
         println!("byte_order {:?}", byte_order);
 
         // Read and validate HeaderMagic
 
         let magic_field = match byte_order {
-            ByteOrder::LittleEndian => try!(reader.read_le_u16()),
-            ByteOrder::BigEndian => try!(reader.read_be_u16()),
+            ByteOrder::LittleEndian => try!(reader.read_u16::<LittleEndian>()),
+            ByteOrder::BigEndian => try!(reader.read_u16::<BigEndian>()),
         };
 
         let magic: HeaderMagic;
@@ -63,14 +65,14 @@ impl TIFFReader {
         else if magic_field == HeaderMagic::BigEndian as u16 {
             magic = HeaderMagic::BigEndian;
         } else {
-            return Err(Error::new(ErrorKind::Other, String::from_str("Invalid magic number in header")));
+            return Err(Error::new(ErrorKind::Other, "Invalid magic number in header"));
         }
 
         // Read offset to first IFD
 
         let ifd_offset_field = match byte_order {
-            ByteOrder::LittleEndian => try!(reader.read_le_u32()),
-            ByteOrder::BigEndian => try!(reader.read_be_u32()),
+            ByteOrder::LittleEndian => try!(reader.read_u32::<LittleEndian>()),
+            ByteOrder::BigEndian => try!(reader.read_u32::<BigEndian>()),
         };
 
         // Assemble validated header
@@ -81,7 +83,7 @@ impl TIFFReader {
             ifd_offset: ifd_offset_field,
         });
 
-        try!(reader.seek(ifd_offset_field as i64, SeekFrom::Start));
+        try!(reader.seek(SeekFrom::Start(ifd_offset_field as u64)));
         println!("IFD offset: {:?}", ifd_offset_field);
 
         try!(self.read_IFD(reader));
@@ -92,7 +94,7 @@ impl TIFFReader {
     #[allow(non_snake_case)]
     fn read_IFD(&self, reader: &mut SeekableReader) -> Result<Box<IFD>> {
 
-        let entry_count = try!(reader.read_be_u16());
+        let entry_count = try!(reader.read_u16::<LittleEndian>());
 
         println!("IFD entry count: {}", entry_count);
 
@@ -109,13 +111,16 @@ impl TIFFReader {
 
     fn read_tag(&self, entry_number: usize, reader: &mut SeekableReader) -> Result<Box<IFDEntry>> {
 
-        let tag_value = try!(reader.read_le_u16());
-        let typ_value = try!(reader.read_le_u16());
-        let count_value = try!(reader.read_le_u32());
-        let value_offset_value = try!(reader.read_le_u32());
+        let tag_value = try!(reader.read_u16::<LittleEndian>());
+        let typ_value = try!(reader.read_u16::<LittleEndian>());
+        let count_value = try!(reader.read_u32::<LittleEndian>());
+        let value_offset_value = try!(reader.read_u32::<LittleEndian>());
 
-        let tag = decode_tag(tag_value).expect(format!("Invalid tag {:x}", tag_value).as_str());
-        let typ = decode_tag_type(typ_value).expect(format!("Invalid tag type {:x}", typ_value).as_str());
+        let tag_msg = format!("Invalid tag {:x}", tag_value);
+        let tag = decode_tag(tag_value).expect(&tag_msg);
+
+        let typ_msg = format!("Invalid tag type {:x}", typ_value);
+        let typ = decode_tag_type(typ_value).expect(&typ_msg);
 
         let e0 = Box::new(IFDEntry {
             tag: tag,

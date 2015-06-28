@@ -14,14 +14,25 @@
 #![allow(dead_code)]
 
 //----------------------------------------------------------------------------
+// Dependencies
+
+// For binary file I/O
+extern crate byteorder;
+
+//----------------------------------------------------------------------------
+// Module imports
+
+use byteorder::{ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
+
+use std::io::{Read, Seek};
+
+//----------------------------------------------------------------------------
 // Reexports
 
 pub use reader::TIFFReader;
 
 pub mod reader;
 //mod writer;
-
-use std::io::{Read, Seek};
 
 //----------------------------------------------------------------------------
 // Types
