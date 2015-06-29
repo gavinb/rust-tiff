@@ -46,7 +46,7 @@ impl TIFFReader {
             byte_order = ByteOrder::BigEndian;
         } else {
             return Err(Error::new(ErrorKind::Other,
-                                  "Invalid byte order in header"));
+                                  format!("Invalid byte order in header: {:04x}", byte_order_field)));
         }
         println!("byte_order {:?}", byte_order);
 

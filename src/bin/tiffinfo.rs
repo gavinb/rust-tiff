@@ -11,7 +11,8 @@ fn print_header(x: &tiff::TIFFHeader) {
 
 fn main() {
     let tiff_reader = tiff::TIFFReader;
-    let file_name = env::args().next().unwrap();
+    let file_name = env::args().nth(1).unwrap();
+    println!("tiffinfo: {}", file_name);
     match tiff_reader.load(&file_name) {
         Ok(h) => {
             println!("Read tiff {:?}", h);
