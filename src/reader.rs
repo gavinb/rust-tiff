@@ -33,14 +33,15 @@ impl TIFFReader {
 
     pub fn read(&self, reader: &mut SeekableReader) -> Result<Box<TIFFHeader>> {
 
-        let byte_order = self.read_byte_order(reader).unwrap();
+        let byte_order = self.read_byte_order(reader);
 
         let magic = match byte_order {
-            TIFFByteOrder::LittleEndian => self.read_magic::<LittleEndian>(reader),
-            TIFFByteOrder::BigEndian => self.read_magic::<BigEndian>(reader),
+            Ok(TIFFByteOrder::LittleEndian) => self.read_magic::<LittleEndian>(reader),
+            Ok(TIFFByteOrder::BigEndian) => self.read_magic::<BigEndian>(reader),
+            Err(e) => Err(e)
         };
 
-        Err(Error::new(ErrorKind::Other, "Not implemented"))
+        self.read_::<LittleEndian>(reader)
     }
 
     pub fn read_byte_order(&self, reader: &mut SeekableReader) -> Result<TIFFByteOrder> {
@@ -102,15 +103,15 @@ impl TIFFReader {
         try!(reader.seek(SeekFrom::Start(ifd_offset_field as u64)));
         println!("IFD offset: {:?}", ifd_offset_field);
 
-        try!(self.read_IFD(reader));
+        try!(self.read_IFD::<Endian>(reader));
 
         Ok(header)
     }
 
     #[allow(non_snake_case)]
-    fn read_IFD(&self, reader: &mut SeekableReader) -> Result<Box<IFD>> {
+    fn read_IFD<Endian: ByteOrder>(&self, reader: &mut SeekableReader) -> Result<Box<IFD>> {
 
-        let entry_count = try!(reader.read_u16::<LittleEndian>());
+        let entry_count = try!(reader.read_u16::<Endian>());
 
         println!("IFD entry count: {}", entry_count);
 
@@ -119,18 +120,18 @@ impl TIFFReader {
         println!("IFD entry count: {}", entry_count);
 
         for entry_number in 0..entry_count as usize {
-            ifd.entries.push(*self.read_tag(entry_number, reader).unwrap());
+            ifd.entries.push(*self.read_tag::<Endian>(entry_number, reader).unwrap());
         }
 
         Ok(ifd)
     }
 
-    fn read_tag(&self, entry_number: usize, reader: &mut SeekableReader) -> Result<Box<IFDEntry>> {
+    fn read_tag<Endian: ByteOrder>(&self, entry_number: usize, reader: &mut SeekableReader) -> Result<Box<IFDEntry>> {
 
-        let tag_value = try!(reader.read_u16::<LittleEndian>());
-        let typ_value = try!(reader.read_u16::<LittleEndian>());
-        let count_value = try!(reader.read_u32::<LittleEndian>());
-        let value_offset_value = try!(reader.read_u32::<LittleEndian>());
+        let tag_value = try!(reader.read_u16::<Endian>());
+        let typ_value = try!(reader.read_u16::<Endian>());
+        let count_value = try!(reader.read_u32::<Endian>());
+        let value_offset_value = try!(reader.read_u32::<Endian>());
 
         let tag_msg = format!("Invalid tag {:x}", tag_value);
         let tag = decode_tag(tag_value).expect(&tag_msg);
