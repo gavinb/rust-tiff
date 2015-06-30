@@ -54,7 +54,7 @@ pub type DOUBLE = f64;
 
 #[repr(u16)]
 #[derive(Debug)]
-pub enum ByteOrder {
+pub enum TIFFByteOrder {
     LittleEndian = 0x4949,
     BigEndian = 0x4d4d,
 }
@@ -111,7 +111,7 @@ pub enum ResolutionUnit {
 
 #[derive(Debug)]
 pub struct TIFFHeader {
-    pub byte_order: ByteOrder,
+    pub byte_order: TIFFByteOrder,
     pub magic: HeaderMagic,
     pub ifd_offset: LONG,
 }

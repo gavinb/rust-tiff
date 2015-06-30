@@ -15,9 +15,9 @@ use std::io::{Result, Error, ErrorKind, Read, Seek, SeekFrom};
 use std::path::Path;
 use std::fs::File;
 
-use byteorder::{ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
+use byteorder::{ReadBytesExt, WriteBytesExt, ByteOrder, BigEndian, LittleEndian};
 
-use {ByteOrder, HeaderMagic, TIFFHeader, IFD, IFDEntry, decode_tag, decode_tag_type, SeekableReader};
+use {TIFFByteOrder, HeaderMagic, TIFFHeader, IFD, IFDEntry, decode_tag, decode_tag_type, SeekableReader};
 
 pub struct TIFFReader;
 
@@ -28,22 +28,26 @@ impl TIFFReader {
         let filepath = Path::new(filename);
         let mut reader = File::open(&filepath).unwrap();
 
-        self.read(&mut reader)
+        self.read::<LittleEndian>(&mut reader)
     }
 
-    pub fn read(&self, reader: &mut SeekableReader) -> Result<Box<TIFFHeader>> {
+    pub fn read_byte_order(&self, reader: &mut SeekableReader) -> Result<Box<TIFFHeader>> {
+        Err(Error::new(ErrorKind::Other, ""))
+    }
+
+    pub fn read<E: ByteOrder>(&self, reader: &mut SeekableReader) -> Result<Box<TIFFHeader>> {
 
         // @todo Ensure file is >= min size
 
         // Read and validate ByteOrder
 
         let byte_order_field = try!(reader.read_u16::<LittleEndian>());
-        let byte_order: ByteOrder;
+        let byte_order: TIFFByteOrder;
 
-        if byte_order_field == ByteOrder::LittleEndian as u16 {
-            byte_order = ByteOrder::LittleEndian;
-        } else if byte_order_field == ByteOrder::BigEndian as u16 {
-            byte_order = ByteOrder::BigEndian;
+        if byte_order_field == TIFFByteOrder::LittleEndian as u16 {
+            byte_order = TIFFByteOrder::LittleEndian;
+        } else if byte_order_field == TIFFByteOrder::BigEndian as u16 {
+            byte_order = TIFFByteOrder::BigEndian;
         } else {
             return Err(Error::new(ErrorKind::Other,
                                   format!("Invalid byte order in header: {:04x}", byte_order_field)));
@@ -53,8 +57,8 @@ impl TIFFReader {
         // Read and validate HeaderMagic
 
         let magic_field = match byte_order {
-            ByteOrder::LittleEndian => try!(reader.read_u16::<LittleEndian>()),
-            ByteOrder::BigEndian => try!(reader.read_u16::<BigEndian>()),
+            TIFFByteOrder::LittleEndian => try!(reader.read_u16::<LittleEndian>()),
+            TIFFByteOrder::BigEndian => try!(reader.read_u16::<BigEndian>()),
         };
 
         let magic: HeaderMagic;
@@ -71,8 +75,8 @@ impl TIFFReader {
         // Read offset to first IFD
 
         let ifd_offset_field = match byte_order {
-            ByteOrder::LittleEndian => try!(reader.read_u32::<LittleEndian>()),
-            ByteOrder::BigEndian => try!(reader.read_u32::<BigEndian>()),
+            TIFFByteOrder::LittleEndian => try!(reader.read_u32::<LittleEndian>()),
+            TIFFByteOrder::BigEndian => try!(reader.read_u32::<BigEndian>()),
         };
 
         // Assemble validated header
