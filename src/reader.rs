@@ -28,17 +28,24 @@ impl TIFFReader {
         let filepath = Path::new(filename);
         let mut reader = File::open(&filepath).unwrap();
 
-        self.read::<LittleEndian>(&mut reader)
+        self.read(&mut reader)
     }
 
-    pub fn read_byte_order(&self, reader: &mut SeekableReader) -> Result<Box<TIFFHeader>> {
-        Err(Error::new(ErrorKind::Other, ""))
+    pub fn read(&self, reader: &mut SeekableReader) -> Result<Box<TIFFHeader>> {
+
+        let byte_order = self.read_byte_order(reader).unwrap();
+
+        let magic = match byte_order {
+            TIFFByteOrder::LittleEndian => self.read_magic::<LittleEndian>(reader),
+            TIFFByteOrder::BigEndian => self.read_magic::<BigEndian>(reader),
+        };
+
+        Err(Error::new(ErrorKind::Other, "Not implemented"))
     }
 
-    pub fn read<E: ByteOrder>(&self, reader: &mut SeekableReader) -> Result<Box<TIFFHeader>> {
+    pub fn read_byte_order(&self, reader: &mut SeekableReader) -> Result<TIFFByteOrder> {
 
-        // @todo Ensure file is >= min size
-
+        // Bytes 0-1: "II" or "MM"
         // Read and validate ByteOrder
 
         let byte_order_field = try!(reader.read_u16::<LittleEndian>());
@@ -54,36 +61,41 @@ impl TIFFReader {
         }
         println!("byte_order {:?}", byte_order);
 
-        // Read and validate HeaderMagic
+        Ok(byte_order)
+    }
 
-        let magic_field = match byte_order {
-            TIFFByteOrder::LittleEndian => try!(reader.read_u16::<LittleEndian>()),
-            TIFFByteOrder::BigEndian => try!(reader.read_u16::<BigEndian>()),
-        };
+    pub fn read_magic<Endian: ByteOrder>(&self, reader: &mut SeekableReader) -> Result<HeaderMagic> {
+
+        // Read and validate HeaderMagic
+        // Bytes 2-3: 42
+
+        let magic_field = try!(reader.read_u16::<Endian>());
 
         let magic: HeaderMagic;
 
         if magic_field == HeaderMagic::LittleEndian as u16 {
-            magic = HeaderMagic::LittleEndian;
+            Ok(HeaderMagic::LittleEndian)
         }
         else if magic_field == HeaderMagic::BigEndian as u16 {
-            magic = HeaderMagic::BigEndian;
+            Ok(HeaderMagic::BigEndian)
         } else {
-            return Err(Error::new(ErrorKind::Other, "Invalid magic number in header"));
+            Err(Error::new(ErrorKind::Other, "Invalid magic number in header"))
         }
+    }
+
+    pub fn read_<Endian: ByteOrder>(&self, reader: &mut SeekableReader) -> Result<Box<TIFFHeader>> {
+
+        // @todo Ensure file is >= min size
 
         // Read offset to first IFD
 
-        let ifd_offset_field = match byte_order {
-            TIFFByteOrder::LittleEndian => try!(reader.read_u32::<LittleEndian>()),
-            TIFFByteOrder::BigEndian => try!(reader.read_u32::<BigEndian>()),
-        };
+        let ifd_offset_field = try!(reader.read_u32::<Endian>());
 
         // Assemble validated header
 
         let header = Box::new(TIFFHeader {
-            byte_order: byte_order,
-            magic: magic,
+            byte_order: TIFFByteOrder::LittleEndian,
+            magic: HeaderMagic::LittleEndian,
             ifd_offset: ifd_offset_field,
         });
 
