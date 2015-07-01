@@ -40,7 +40,7 @@ pub mod reader;
 pub type BYTE = u8;
 pub type SHORT = u16;
 pub type LONG = u32;
-// pub type ASCII = &[u8];
+pub type ASCII = String;
 pub type RATIONAL = (u32, u32);
 pub type SBYTE = i8;
 pub type SSHORT = i16;
@@ -74,12 +74,12 @@ pub enum TagType {
     ShortTag = 3,
     LongTag = 4,
     RationalTag = 5,
-    SByteTag = 6,
+    SignedByteTag = 6,
     UndefinedTag = 7,
-    SShortTag = 8,
-    SLongTag = 9,
-    SRationalTag = 10,
-    FLoatTag = 11,
+    SignedShortTag = 8,
+    SignedLongTag = 9,
+    SignedRationalTag = 10,
+    FloatTag = 11,
     DoubleTag = 12,
 }
 
@@ -299,13 +299,78 @@ pub fn decode_tag_type(typ: u16) -> Option<TagType> {
         3 => Some(TagType::ShortTag),
         4 => Some(TagType::LongTag),
         5 => Some(TagType::RationalTag),
-        6 => Some(TagType::SByteTag),
+        6 => Some(TagType::SignedByteTag),
         7 => Some(TagType::UndefinedTag),
-        8 => Some(TagType::SShortTag),
-        9 => Some(TagType::SLongTag),
-        10 => Some(TagType::SRationalTag),
-        11 => Some(TagType::FLoatTag),
+        8 => Some(TagType::SignedShortTag),
+        9 => Some(TagType::SignedLongTag),
+        10 => Some(TagType::SignedRationalTag),
+        11 => Some(TagType::FloatTag),
         12 => Some(TagType::DoubleTag),
         _ => None,
     }
 }
+
+/*
+    Required Fields for Bilevel Images
+
+    - ImageWidth 
+    - ImageLength 
+    - Compression 
+    - PhotometricInterpretation 
+    - StripOffsets 
+    - RowsPerStrip 
+    - StripByteCounts 
+    - XResolution 
+    - YResolution 
+    - ResolutionUnit
+ */
+
+/*
+    Required Fields for Grayscale Images
+
+    - ImageWidth
+    - ImageLength
+    - BitsPerSample
+    - Compression
+    - PhotometricInterpretation
+    - StripOffsets
+    - RowsPerStrip
+    - StripByteCounts
+    - XResolution
+    - YResolution
+    - ResolutionUnit
+ */
+
+/*
+    Required Fields for Palette Colour Images
+
+    - ImageWidth
+    - ImageLength
+    - BitsPerSample
+    - Compression
+    - PhotometricInterpretation
+    - StripOffsets
+    - RowsPerStrip
+    - StripByteCounts
+    - XResolution
+    - YResolution
+    - ResolutionUnit
+    - ColorMap
+ */
+
+/*
+    Required Fields for RGB Images
+
+    - ImageWidth
+    - ImageLength
+    - BitsPerSample
+    - Compression
+    - PhotometricInterpretation
+    - StripOffsets
+    - SamplesPerPixel
+    - RowsPerStrip
+    - StripByteCounts
+    - XResolution
+    - YResolution
+    - ResolutionUnit
+ */
