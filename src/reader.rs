@@ -36,12 +36,12 @@ impl TIFFReader {
         let byte_order = self.read_byte_order(reader);
 
         let magic = match byte_order {
-            Ok(TIFFByteOrder::LittleEndian) => self.read_magic::<LittleEndian>(reader),
-            Ok(TIFFByteOrder::BigEndian) => self.read_magic::<BigEndian>(reader),
+            Ok(TIFFByteOrder::LittleEndian) => self.read_magic(reader),
+            Ok(TIFFByteOrder::BigEndian) => self.read_magic(reader),
             Err(e) => Err(e)
         };
 
-        self.read_::<LittleEndian>(reader)
+        self.read_::<BigEndian>(reader)
     }
 
     pub fn read_byte_order(&self, reader: &mut SeekableReader) -> Result<TIFFByteOrder> {
@@ -65,12 +65,12 @@ impl TIFFReader {
         Ok(byte_order)
     }
 
-    pub fn read_magic<Endian: ByteOrder>(&self, reader: &mut SeekableReader) -> Result<HeaderMagic> {
+    pub fn read_magic(&self, reader: &mut SeekableReader) -> Result<HeaderMagic> {
 
+        // Bytes 2-3: 0042
         // Read and validate HeaderMagic
-        // Bytes 2-3: 42
 
-        let magic_field = try!(reader.read_u16::<Endian>());
+        let magic_field = try!(reader.read_u16::<LittleEndian>());
 
         let magic: HeaderMagic;
 
@@ -88,7 +88,8 @@ impl TIFFReader {
 
         // @todo Ensure file is >= min size
 
-        // Read offset to first IFD
+        // Bytes 4-7: offset
+        // Offset from start of file to first IFD
 
         let ifd_offset_field = try!(reader.read_u32::<Endian>());
 
@@ -111,13 +112,12 @@ impl TIFFReader {
     #[allow(non_snake_case)]
     fn read_IFD<Endian: ByteOrder>(&self, reader: &mut SeekableReader) -> Result<Box<IFD>> {
 
+        // 2 byte count of IFD entries
         let entry_count = try!(reader.read_u16::<Endian>());
 
         println!("IFD entry count: {}", entry_count);
 
         let mut ifd = Box::new(IFD { count: entry_count, entries: Vec::with_capacity(entry_count as usize) });
-
-        println!("IFD entry count: {}", entry_count);
 
         for entry_number in 0..entry_count as usize {
             ifd.entries.push(*self.read_tag::<Endian>(entry_number, reader).unwrap());
@@ -127,18 +127,28 @@ impl TIFFReader {
     }
 
     fn read_tag<Endian: ByteOrder>(&self, entry_number: usize, reader: &mut SeekableReader) -> Result<Box<IFDEntry>> {
-
+        
+        // Bytes 0..1: u16 tag ID
         let tag_value = try!(reader.read_u16::<Endian>());
+
+        // Bytes 2..3: u16 field Type
         let typ_value = try!(reader.read_u16::<Endian>());
+
+        // Bytes 4..7: u32 number of Values of type
         let count_value = try!(reader.read_u32::<Endian>());
+
+        // Bytes 8..11: u32 offset in file to Value
         let value_offset_value = try!(reader.read_u32::<Endian>());
 
+        // Decode tag
         let tag_msg = format!("Invalid tag {:x}", tag_value);
         let tag = decode_tag(tag_value).expect(&tag_msg);
 
+        // Decode type
         let typ_msg = format!("Invalid tag type {:x}", typ_value);
         let typ = decode_tag_type(typ_value).expect(&typ_msg);
 
+        // Create entry
         let e0 = Box::new(IFDEntry {
             tag: tag,
             typ: typ,
@@ -146,7 +156,8 @@ impl TIFFReader {
             value_offset: value_offset_value,
         });
 
-        println!("IFD[{:?}] {:?} {:?} {:x} {}", entry_number, e0.tag, e0.typ, e0.count, e0.value_offset);
+        println!("IFD[{:?}] tag: {:?} type: {:?} count: {} offset: {:08x}",
+                 entry_number, e0.tag, e0.typ, e0.count, e0.value_offset);
         Ok(e0)
     }
 }
