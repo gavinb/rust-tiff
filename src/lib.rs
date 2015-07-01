@@ -106,6 +106,15 @@ pub enum ResolutionUnit {
     Centimetre = 3,
 }
 
+#[repr(u16)]
+#[derive(Debug)]
+pub enum SampleFormat {
+    UnsignedInteger = 1,
+    TwosComplementSignedInteger = 2,
+    IEEEFloatingPoint = 3,
+    Undefined = 4,
+}
+
 //----------------------------------------------------------------------------
 // Structs
 
@@ -175,6 +184,20 @@ pub enum TIFFTag {
     ThresholdingTag = 0x0107,
     XResolutionTag = 0x011a,
     YResolutionTag = 0x011b,
+
+    // Section 20: Colorimetry
+
+    WhitePointTag = 0x013e,
+    PrimaryChromaticities = 0x013f,
+    TransferFunction = 0x012d,
+    TransferRange = 0x0156,
+    ReferenceBlackWhite = 0x0214,
+    
+    // Section 21: YCbCr Images
+
+    YCbCrCoefficients = 0x0211,
+    YCbCrSubsampling = 0x0212,
+    YCbCrPositioning = 0x0213,
 
     // TIFF/EP Tags
 
