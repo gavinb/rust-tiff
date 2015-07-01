@@ -17,7 +17,7 @@ use std::fs::File;
 
 use byteorder::{ReadBytesExt, WriteBytesExt, ByteOrder, BigEndian, LittleEndian};
 
-use {TIFFByteOrder, HeaderMagic, TIFFHeader, IFD, IFDEntry, decode_tag, decode_tag_type, SeekableReader};
+use {TIFFByteOrder, HeaderMagic, TIFFHeader, IFD, IFDEntry, decode_tag, decode_tag_type, type_and_count_for_tag, SeekableReader};
 
 pub struct TIFFReader;
 
@@ -156,8 +156,16 @@ impl TIFFReader {
             value_offset: value_offset_value,
         });
 
-        println!("IFD[{:?}] tag: {:?} type: {:?} count: {} offset: {:08x}",
-                 entry_number, e0.tag, e0.typ, e0.count, e0.value_offset);
+        let maybe_tac = type_and_count_for_tag(e0.tag);
+
+        println!("IFD[{:?}] tag: {:?} type: {:?} (expect {:?}) count: {} (expect {:?}) offset: {:08x}",
+                 entry_number, e0.tag, e0.typ, 0, e0.count, 0, e0.value_offset);
+
+        let (expected_tag, expected_count) = maybe_tac.unwrap();
+
+        println!("IFD[{:?}] tag: {:?} type: {:?} (expect {:?}) count: {} (expect {:?}) offset: {:08x}",
+                 entry_number, e0.tag, e0.typ, expected_tag, e0.count, expected_count, e0.value_offset);
+
         Ok(e0)
     }
 }

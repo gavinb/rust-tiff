@@ -81,6 +81,9 @@ pub enum TagType {
     SignedRationalTag = 10,
     FloatTag = 11,
     DoubleTag = 12,
+
+    // Not part of spec
+    ShortOrLongTag = 0xfffe,
 }
 
 #[repr(u16)]
@@ -141,7 +144,7 @@ pub struct IFD {
 // Baseline Tags
 
 #[repr(u16)]
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum TIFFTag {
 
     // Baseline Tags
@@ -334,6 +337,52 @@ pub fn decode_tag_type(typ: u16) -> Option<TagType> {
         11 => Some(TagType::FloatTag),
         12 => Some(TagType::DoubleTag),
         _ => None,
+    }
+}
+
+// Returns (type, count) for known tags. 0 is unknown/variable/unspecified.
+pub fn type_and_count_for_tag(tag: TIFFTag) -> Option<(TagType, usize)> {
+    match tag {
+        TIFFTag::ArtistTag => Some((TagType::ASCIITag, 0)),
+        TIFFTag::BitsPerSampleTag => Some((TagType::ShortTag, 0)),
+        TIFFTag::CellLengthTag => Some((TagType::ShortTag, 1)),
+        TIFFTag::CellWidthTag => Some((TagType::ShortTag, 1)),
+        TIFFTag::ColorMapTag => Some((TagType::ShortTag, 0)),
+        TIFFTag::CompressionTag => Some((TagType::ShortTag, 1)),
+        TIFFTag::CopyrightTag => Some((TagType::ASCIITag, 0)),
+        TIFFTag::DateTimeTag => Some((TagType::ASCIITag, 0)),
+        TIFFTag::ExtraSamplesTag => Some((TagType::ShortTag, 0)),
+        TIFFTag::FillOrderTag => Some((TagType::ShortTag, 1)),
+//        TIFFTag::FreeByteCountsTag => ,
+//        TIFFTag::FreeOffsetsTag => ,
+        TIFFTag::GrayResponseCurveTag => Some((TagType::ShortTag, 0)),
+        TIFFTag::GrayResponseUnitTag => Some((TagType::ShortTag, 1)),
+        TIFFTag::HostComputerTag => Some((TagType::ASCIITag, 0)),
+        TIFFTag::ImageDescriptionTag => Some((TagType::ASCIITag, 0)),
+        TIFFTag::ImageLengthTag => Some((TagType::ShortOrLongTag, 1)),
+        TIFFTag::ImageWidthTag => Some((TagType::ShortOrLongTag, 1)),
+        TIFFTag::InterColorProfileTag => Some((TagType::UndefinedTag, 0)),
+        TIFFTag::MakeTag => Some((TagType::ASCIITag, 0)),
+        TIFFTag::MaxSampleValueTag => Some((TagType::ShortTag, 0)),
+        TIFFTag::MinSampleValueTag => Some((TagType::ShortTag, 0)),
+        TIFFTag::ModelTag => Some((TagType::ASCIITag, 0)),
+//        TIFFTag::NewSubfileTypeTag => ,
+        TIFFTag::OrientationTag => Some((TagType::ShortTag, 1)),
+        TIFFTag::PhotometricInterpretationTag => Some((TagType::ShortTag, 1)),
+        TIFFTag::PlanarConfigurationTag => Some((TagType::ShortTag, 1)),
+        TIFFTag::Predictor => Some((TagType::ShortTag, 1)),
+        TIFFTag::ResolutionUnitTag => Some((TagType::ShortTag, 1)),
+        TIFFTag::RowsPerStripTag => Some((TagType::ShortOrLongTag, 1)),
+        TIFFTag::SampleFormat => Some((TagType::ShortTag, 0)),
+        TIFFTag::SamplesPerPixel => Some((TagType::ShortTag, 1)),
+        TIFFTag::SoftwareTag => Some((TagType::ASCIITag, 0)),
+        TIFFTag::StripByteCountsTag => Some((TagType::ShortOrLongTag, 0)),
+        TIFFTag::StripOffsetsTag => Some((TagType::LongTag, 0)),
+        TIFFTag::SubfileTypeTag => Some((TagType::ShortTag, 1)),
+        TIFFTag::ThresholdingTag => Some((TagType::ShortTag, 1)),
+        TIFFTag::XResolutionTag => Some((TagType::RationalTag, 1)),
+        TIFFTag::YResolutionTag => Some((TagType::RationalTag, 1)),
+        _ =>  None,
     }
 }
 
