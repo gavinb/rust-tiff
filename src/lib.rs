@@ -67,7 +67,7 @@ pub enum HeaderMagic {
 }
 
 #[repr(u16)]
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub enum TagType {
     ByteTag = 1,
     ASCIITag = 2,
@@ -84,6 +84,21 @@ pub enum TagType {
 
     // Not part of spec
     ShortOrLongTag = 0xfffe,
+}
+
+#[derive(Debug)]
+pub enum TagValue {
+    ByteValue(BYTE),
+    ShortValue(SHORT),
+    LongValue(LONG),
+    AsciiValue(ASCII),
+    RationalValue(RATIONAL),
+    SignedByteValue(SBYTE),
+    SignedShortValue(SSHORT),
+    SignedLongValue(SLONG),
+    SignedRationalValue(SRATIONAL),
+    FloatValue(FLOAT),
+    DoubleValue(DOUBLE),
 }
 
 #[repr(u16)]
@@ -133,6 +148,7 @@ pub struct IFDEntry {
     typ: TagType,
     count: LONG,
     value_offset: LONG,
+    value: Option<TagValue>,
 }
 
 pub struct IFD {
@@ -341,7 +357,7 @@ pub fn decode_tag_type(typ: u16) -> Option<TagType> {
 }
 
 // Returns (type, count) for known tags. 0 is unknown/variable/unspecified.
-pub fn type_and_count_for_tag(tag: TIFFTag) -> Option<(TagType, usize)> {
+pub fn type_and_count_for_tag(tag: TIFFTag) -> Option<(TagType, u32)> {
     match tag {
         TIFFTag::ArtistTag => Some((TagType::ASCIITag, 0)),
         TIFFTag::BitsPerSampleTag => Some((TagType::ShortTag, 0)),

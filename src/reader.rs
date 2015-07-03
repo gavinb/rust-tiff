@@ -17,7 +17,7 @@ use std::fs::File;
 
 use byteorder::{ReadBytesExt, WriteBytesExt, ByteOrder, BigEndian, LittleEndian};
 
-use {TIFFByteOrder, HeaderMagic, TIFFHeader, IFD, IFDEntry, decode_tag, decode_tag_type, type_and_count_for_tag, SeekableReader};
+use {TIFFByteOrder, HeaderMagic, TIFFHeader, IFD, IFDEntry, decode_tag, decode_tag_type, type_and_count_for_tag, SeekableReader, BYTE, SBYTE, SHORT, SSHORT, LONG, SLONG, FLOAT, TagType, TagValue};
 
 pub struct TIFFReader;
 
@@ -149,22 +149,60 @@ impl TIFFReader {
         let typ = decode_tag_type(typ_value).expect(&typ_msg);
 
         // Create entry
-        let e0 = Box::new(IFDEntry {
+        let mut e0 = Box::new(IFDEntry {
             tag: tag,
             typ: typ,
             count: count_value,
             value_offset: value_offset_value,
+            value: None,
         });
 
         let maybe_tac = type_and_count_for_tag(e0.tag);
 
-        println!("IFD[{:?}] tag: {:?} type: {:?} (expect {:?}) count: {} (expect {:?}) offset: {:08x}",
-                 entry_number, e0.tag, e0.typ, 0, e0.count, 0, e0.value_offset);
+        let (expected_typ, expected_count) = maybe_tac.unwrap();
 
-        let (expected_tag, expected_count) = maybe_tac.unwrap();
+        println!("IFD[{:?}] tag: {:?} type: {:?} count: {} offset: {:08x}",
+                 entry_number, e0.tag, e0.typ, e0.count, e0.value_offset);
 
-        println!("IFD[{:?}] tag: {:?} type: {:?} (expect {:?}) count: {} (expect {:?}) offset: {:08x}",
-                 entry_number, e0.tag, e0.typ, expected_tag, e0.count, expected_count, e0.value_offset);
+        let valid_short_or_long = expected_typ == TagType::ShortOrLongTag &&
+            (e0.typ == TagType::ShortTag ||
+             e0.typ == TagType::LongTag);
+
+        if  ! valid_short_or_long && e0.typ != expected_typ {
+            println!("    *** ERROR: expected typ: {:?} found: {:?}", expected_typ, e0.typ);
+        }
+
+        if expected_count != 0 && e0.count != expected_count {
+            println!("    *** ERROR: expected count: {:?} found: {:?}", expected_count, e0.count);
+        }
+
+        /*
+            p15: Value/Offset
+
+            To save time and space the Value Offset contains the Value instead
+            of pointing to the Value if and only if the Value fits into 4
+            bytes. If the Value is shorter than 4 bytes, it is left-justified
+            within the 4-byte Value Offset, i.e., stored in the lower- numbered
+            bytes. Whether the Value fits within 4 bytes is determined by the
+            Type and Count of the field.
+        */
+
+        // Try to read values
+        if e0.count == 1 {
+            e0.value = match e0.typ {
+                TagType::ByteTag => Some(TagValue::ByteValue(e0.value_offset as BYTE)),
+                TagType::ShortTag => Some(TagValue::ShortValue(e0.value_offset as SHORT)),
+                TagType::LongTag => Some(TagValue::LongValue(e0.value_offset)),
+                TagType::SignedByteTag => Some(TagValue::SignedByteValue(e0.value_offset as SBYTE)),
+                TagType::SignedShortTag => Some(TagValue::SignedShortValue(e0.value_offset as SSHORT)),
+                TagType::SignedLongTag => Some(TagValue::SignedLongValue(e0.value_offset as SLONG)),
+                TagType::FloatTag => Some(TagValue::FloatValue(e0.value_offset as FLOAT)),
+                TagType::ShortOrLongTag => Some(TagValue::LongValue(e0.value_offset as LONG)), // @todo FIXME
+                _ => None
+            };
+        }
+
+        println!("    {:?}", e0.value);
 
         Ok(e0)
     }
