@@ -133,6 +133,15 @@ pub enum SampleFormat {
     Undefined                   = 4,
 }
 
+#[derive(Debug)]
+pub enum ImageType {
+    Bilevel,
+    Grayscale,
+    PaletteColour,
+    RGB,
+    YCbCr,
+}
+
 //----------------------------------------------------------------------------
 // Structs
 
