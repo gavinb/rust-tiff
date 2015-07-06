@@ -398,6 +398,11 @@ pub fn type_and_count_for_tag(tag: TIFFTag) -> Option<(TagType, u32)> {
         TIFFTag::ThresholdingTag => Some((TagType::ShortTag, 1)),
         TIFFTag::XResolutionTag => Some((TagType::RationalTag, 1)),
         TIFFTag::YResolutionTag => Some((TagType::RationalTag, 1)),
+        // Extended
+        TIFFTag::XMPTag => Some((TagType::ByteTag, 0)),
+        TIFFTag::PhotoshopTag => Some((TagType::ByteTag, 0)),
+        TIFFTag::EXIFTag => Some((TagType::LongTag, 0)),
+        //
         _ =>  None,
     }
 }
