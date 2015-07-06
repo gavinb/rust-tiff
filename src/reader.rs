@@ -120,13 +120,17 @@ impl TIFFReader {
         let mut ifd = Box::new(IFD { count: entry_count, entries: Vec::with_capacity(entry_count as usize) });
 
         for entry_number in 0..entry_count as usize {
-            ifd.entries.push(*self.read_tag::<Endian>(entry_number, reader).unwrap());
+            let entry = self.read_tag::<Endian>(entry_number, reader);
+            match entry {
+                Ok(e) => ifd.entries.push(e),
+                Err(err) => println!("Invalid tag at index {}: {}", entry_number, err),
+            }
         }
 
         Ok(ifd)
     }
 
-    fn read_tag<Endian: ByteOrder>(&self, entry_number: usize, reader: &mut SeekableReader) -> Result<Box<IFDEntry>> {
+    fn read_tag<Endian: ByteOrder>(&self, entry_number: usize, reader: &mut SeekableReader) -> Result<IFDEntry> {
         
         // Bytes 0..1: u16 tag ID
         let tag_value = try!(reader.read_u16::<Endian>());
@@ -149,15 +153,20 @@ impl TIFFReader {
         let typ = decode_tag_type(typ_value).expect(&typ_msg);
 
         // Create entry
-        let mut e0 = Box::new(IFDEntry {
+        let mut e0 = IFDEntry {
             tag: tag,
             typ: typ,
             count: count_value,
             value_offset: value_offset_value,
             value: None,
-        });
+        };
 
         let maybe_tac = type_and_count_for_tag(e0.tag);
+
+        if maybe_tac.is_none() {
+            return Err(Error::new(ErrorKind::Other,
+                                  format!("Unknown tag {:?} in IFD", e0.tag)));
+        }
 
         let (expected_typ, expected_count) = maybe_tac.unwrap();
 
