@@ -37,17 +37,17 @@ pub mod reader;
 //----------------------------------------------------------------------------
 // Types
 
-pub type BYTE = u8;
-pub type SHORT = u16;
-pub type LONG = u32;
-pub type ASCII = String;
-pub type RATIONAL = (u32, u32);
-pub type SBYTE = i8;
-pub type SSHORT = i16;
-pub type SLONG = i32;
+pub type BYTE      = u8;
+pub type SHORT     = u16;
+pub type LONG      = u32;
+pub type ASCII     = String;
+pub type RATIONAL  = (u32, u32);
+pub type SBYTE     = i8;
+pub type SSHORT    = i16;
+pub type SLONG     = i32;
 pub type SRATIONAL = (i32, i32);
-pub type FLOAT = f32;
-pub type DOUBLE = f64;
+pub type FLOAT     = f32;
+pub type DOUBLE    = f64;
 
 //----------------------------------------------------------------------------
 // Enums
@@ -56,34 +56,34 @@ pub type DOUBLE = f64;
 #[derive(Debug)]
 pub enum TIFFByteOrder {
     LittleEndian = 0x4949,
-    BigEndian = 0x4d4d,
+    BigEndian    = 0x4d4d,
 }
 
 #[repr(u16)]
 #[derive(Debug)]
 pub enum HeaderMagic {
     LittleEndian = 0x002a,
-    BigEndian = 0x2a00,
+    BigEndian    = 0x2a00,
 }
 
 #[repr(u16)]
 #[derive(Debug,PartialEq)]
 pub enum TagType {
-    ByteTag = 1,
-    ASCIITag = 2,
-    ShortTag = 3,
-    LongTag = 4,
-    RationalTag = 5,
-    SignedByteTag = 6,
-    UndefinedTag = 7,
-    SignedShortTag = 8,
-    SignedLongTag = 9,
+    ByteTag           = 1,
+    ASCIITag          = 2,
+    ShortTag          = 3,
+    LongTag           = 4,
+    RationalTag       = 5,
+    SignedByteTag     = 6,
+    UndefinedTag      = 7,
+    SignedShortTag    = 8,
+    SignedLongTag     = 9,
     SignedRationalTag = 10,
-    FloatTag = 11,
-    DoubleTag = 12,
+    FloatTag          = 11,
+    DoubleTag         = 12,
 
     // Not part of spec
-    ShortOrLongTag = 0xfffe,
+    ShortOrLongTag    = 0xfffe,
 }
 
 #[derive(Debug)]
@@ -111,26 +111,26 @@ pub enum PhotometricInterpretation {
 #[repr(u16)]
 #[derive(Debug)]
 pub enum Compression {
-    None = 1,
-    Huffman = 2,
+    None     = 1,
+    Huffman  = 2,
     PackBits = 32773,
 }
 
 #[repr(u16)]
 #[derive(Debug)]
 pub enum ResolutionUnit {
-    None = 1,
-    Inch = 2,
+    None       = 1,
+    Inch       = 2,
     Centimetre = 3,
 }
 
 #[repr(u16)]
 #[derive(Debug)]
 pub enum SampleFormat {
-    UnsignedInteger = 1,
+    UnsignedInteger             = 1,
     TwosComplementSignedInteger = 2,
-    IEEEFloatingPoint = 3,
-    Undefined = 4,
+    IEEEFloatingPoint           = 3,
+    Undefined                   = 4,
 }
 
 //----------------------------------------------------------------------------
@@ -139,20 +139,20 @@ pub enum SampleFormat {
 #[derive(Debug)]
 pub struct TIFFHeader {
     pub byte_order: TIFFByteOrder,
-    pub magic: HeaderMagic,
+    pub magic:      HeaderMagic,
     pub ifd_offset: LONG,
 }
 
 pub struct IFDEntry {
-    tag: TIFFTag,
-    typ: TagType,
-    count: LONG,
+    tag:          TIFFTag,
+    typ:          TagType,
+    count:        LONG,
     value_offset: LONG,
-    value: Option<TagValue>,
+    value:        Option<TagValue>,
 }
 
 pub struct IFD {
-    count: u16,
+    count:   u16,
     entries: Vec<IFDEntry>,
 }
 
