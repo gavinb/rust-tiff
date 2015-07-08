@@ -81,6 +81,9 @@ pub enum TagType {
     SignedRationalTag = 10,
     FloatTag          = 11,
     DoubleTag         = 12,
+    Long8             = 16,
+    SLong8            = 17,
+    IFD8              = 18,
 
     // Not part of spec
     ShortOrLongTag    = 0xfffe,
@@ -113,6 +116,9 @@ pub enum PhotometricInterpretation {
 pub enum Compression {
     None     = 1,
     Huffman  = 2,
+    LZW      = 5,
+    OJPEG    = 6,
+    JPEG     = 7,
     PackBits = 32773,
 }
 
@@ -140,6 +146,19 @@ pub enum ImageType {
     PaletteColour,
     RGB,
     YCbCr,
+}
+
+#[repr(u16)]
+#[derive(Debug)]
+pub enum ImageOrientation {
+    TopLeft     = 1,	// row 0 top, col 0 lhs
+    TopRight    = 2,	// row 0 top, col 0 rhs
+    BottomRight = 3,	// row 0 bottom, col 0 rhs
+    BottomLeft  = 4,	// row 0 bottom, col 0 lhs
+    LeftTop     = 5,	// row 0 lhs, col 0 top
+    RightTop    = 6, 	// row 0 rhs, col 0 top
+    RightBottom = 7,	// row 0 rhs, col 0 bottom
+    LeftBottom  = 8,	// row 0 lhs, col 0 bottom
 }
 
 //----------------------------------------------------------------------------
@@ -311,7 +330,7 @@ pub fn decode_tag(value: u16) -> Option<TIFFTag> {
         0x0112 => Some(TIFFTag::OrientationTag),
         0x0106 => Some(TIFFTag::PhotometricInterpretationTag),
         0x011c => Some(TIFFTag::PlanarConfigurationTag),
-        0x013d => Some(TIFFTag::Predictor),
+        0x013d => Some(TIFFTag::PredictorTag),
         0x0128 => Some(TIFFTag::ResolutionUnitTag),
         0x0116 => Some(TIFFTag::RowsPerStripTag),
         0x0115 => Some(TIFFTag::SamplesPerPixel),
@@ -395,7 +414,7 @@ pub fn type_and_count_for_tag(tag: TIFFTag) -> Option<(TagType, u32)> {
         TIFFTag::OrientationTag               => Some((TagType::ShortTag, 1)),
         TIFFTag::PhotometricInterpretationTag => Some((TagType::ShortTag, 1)),
         TIFFTag::PlanarConfigurationTag       => Some((TagType::ShortTag, 1)),
-        TIFFTag::Predictor                    => Some((TagType::ShortTag, 1)),
+        TIFFTag::PredictorTag                 => Some((TagType::ShortTag, 1)),
         TIFFTag::ResolutionUnitTag            => Some((TagType::ShortTag, 1)),
         TIFFTag::RowsPerStripTag              => Some((TagType::ShortOrLongTag, 1)),
         TIFFTag::SampleFormat                 => Some((TagType::ShortTag, 0)),
