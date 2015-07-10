@@ -36,16 +36,16 @@ work identically on all platforms supported by the Rust toolchain.
 Building
 --------
 
-This package is available as a crate on the new
-[crates.io](http://crates.io) repository.  To use this package, simply
-add the following line to your `[dependencies]` section in `Cargo.toml`:
+This package will eventually become available as a crate on the new
+[crates.io](http://crates.io) repository.  For now, it needs to be built
+manually with `cargo build`.
 
-    rust-tiff = "0.0.5"
+This project now depends on the`byteorder` crate, for binary file I/O.
 
 Acknowledgements
 ----------------
 
-My thanks to the members of the Rust community on #rust on irc.mozilla.org
+My thanks to the members of the Rust community on #rust on `irc.mozilla.org`
 for all their patient guidance while developing this project.
 
  - Melbourne, Autumn 2014
