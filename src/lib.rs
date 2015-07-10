@@ -25,6 +25,7 @@ extern crate byteorder;
 use byteorder::{ReadBytesExt, WriteBytesExt, BigEndian, LittleEndian};
 
 use std::io::{Read, Seek};
+use std::collections::{HashMap, HashSet};
 
 //----------------------------------------------------------------------------
 // Reexports
@@ -184,11 +185,16 @@ pub struct IFD {
     entries: Vec<IFDEntry>,
 }
 
+pub struct TIFF {
+    header: TIFFHeader,
+    ifd: HashMap<TIFFTag, TagValue>,
+}
+
 //----------------------------------------------------------------------------
 // Baseline Tags
 
 #[repr(u16)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum TIFFTag {
 
     // Baseline Tags
@@ -222,8 +228,8 @@ pub enum TIFFTag {
     PredictorTag                 = 0x013d,
     ResolutionUnitTag            = 0x0128,
     RowsPerStripTag              = 0x0116,
-    SampleFormat                 = 0x0153,
-    SamplesPerPixel              = 0x0115,
+    SampleFormatTag              = 0x0153,
+    SamplesPerPixelTag           = 0x0115,
     SoftwareTag                  = 0x0131,
     StripByteCountsTag           = 0x0117,
     StripOffsetsTag              = 0x0111,
@@ -333,8 +339,8 @@ pub fn decode_tag(value: u16) -> Option<TIFFTag> {
         0x013d => Some(TIFFTag::PredictorTag),
         0x0128 => Some(TIFFTag::ResolutionUnitTag),
         0x0116 => Some(TIFFTag::RowsPerStripTag),
-        0x0115 => Some(TIFFTag::SamplesPerPixel),
-        0x0153 => Some(TIFFTag::SampleFormat),
+        0x0115 => Some(TIFFTag::SamplesPerPixelTag),
+        0x0153 => Some(TIFFTag::SampleFormatTag),
         0x0131 => Some(TIFFTag::SoftwareTag),
         0x0117 => Some(TIFFTag::StripByteCountsTag),
         0x0111 => Some(TIFFTag::StripOffsetsTag),
@@ -417,8 +423,8 @@ pub fn type_and_count_for_tag(tag: TIFFTag) -> Option<(TagType, u32)> {
         TIFFTag::PredictorTag                 => Some((TagType::ShortTag, 1)),
         TIFFTag::ResolutionUnitTag            => Some((TagType::ShortTag, 1)),
         TIFFTag::RowsPerStripTag              => Some((TagType::ShortOrLongTag, 1)),
-        TIFFTag::SampleFormat                 => Some((TagType::ShortTag, 0)),
-        TIFFTag::SamplesPerPixel              => Some((TagType::ShortTag, 1)),
+        TIFFTag::SampleFormatTag              => Some((TagType::ShortTag, 0)),
+        TIFFTag::SamplesPerPixelTag           => Some((TagType::ShortTag, 1)),
         TIFFTag::SoftwareTag                  => Some((TagType::ASCIITag, 0)),
         TIFFTag::StripByteCountsTag           => Some((TagType::ShortOrLongTag, 0)),
         TIFFTag::StripOffsetsTag              => Some((TagType::LongTag, 0)),
@@ -432,6 +438,45 @@ pub fn type_and_count_for_tag(tag: TIFFTag) -> Option<(TagType, u32)> {
         TIFFTag::EXIFTag                      => Some((TagType::LongTag, 0)),
         //
         _ =>  None,
+    }
+}
+
+pub fn validate_required_tags_for(typ: &ImageType) -> Option<HashSet<TIFFTag>> {
+
+    let required_grayscale_tags: HashSet<TIFFTag> = [
+        TIFFTag::ImageWidthTag,
+        TIFFTag::ImageLengthTag,
+        TIFFTag::BitsPerSampleTag,
+        TIFFTag::CompressionTag,
+        TIFFTag::PhotometricInterpretationTag,
+        TIFFTag::StripOffsetsTag,
+        TIFFTag::RowsPerStripTag,
+        TIFFTag::StripByteCountsTag,
+        TIFFTag::XResolutionTag,
+        TIFFTag::YResolutionTag,
+        TIFFTag::ResolutionUnitTag].iter().cloned().collect();
+
+    let required_rgb_image_tags: HashSet<TIFFTag> = [
+        TIFFTag::ImageWidthTag,
+        TIFFTag::ImageLengthTag,
+        TIFFTag::BitsPerSampleTag,
+        TIFFTag::CompressionTag,
+        TIFFTag::PhotometricInterpretationTag,
+        TIFFTag::StripOffsetsTag,
+        TIFFTag::SamplesPerPixelTag,
+        TIFFTag::RowsPerStripTag,
+        TIFFTag::StripByteCountsTag,
+        TIFFTag::XResolutionTag,
+        TIFFTag::YResolutionTag,
+        TIFFTag::ResolutionUnitTag,
+    ].iter().cloned().collect();
+
+    match *typ {
+        ImageType::Bilevel => None, 
+        ImageType::Grayscale => None,
+        ImageType::PaletteColour => None,
+        ImageType::RGB => Some(required_rgb_image_tags.difference(&required_grayscale_tags).cloned().collect()),
+        ImageType::YCbCr => None,
     }
 }
 
@@ -499,3 +544,20 @@ pub fn type_and_count_for_tag(tag: TIFFTag) -> Option<(TagType, u32)> {
     - YResolution
     - ResolutionUnit
  */
+
+impl TIFF {
+
+    pub fn open(filename: &str) {
+    }
+/*
+    pub fn get_field(&self, tag: TIFFTag) -> Option<TagValue> {
+
+        if self.ifd.contains_key(tag) {
+            return Some(self.ifd.get(tag));
+        }
+        else {
+            None
+        }
+    }
+*/
+}

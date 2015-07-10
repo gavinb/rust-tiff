@@ -22,4 +22,29 @@ fn main() {
             println!("File I/O Error: {}", e);
         }
     }
+
+    // Test image profile validation
+    let all_types = [
+        tiff::ImageType::Bilevel,
+        tiff::ImageType::Grayscale,
+        tiff::ImageType::PaletteColour,
+        tiff::ImageType::RGB,
+        tiff::ImageType::YCbCr];
+    println!("Image validity test:");
+    for typ in all_types.iter() {
+
+        let ans = tiff::validate_required_tags_for(typ);
+        match ans {
+            Some(missing_tags) => {
+                println!("  {:?}: invalid, missing:", typ);
+                for x in &missing_tags {
+                    println!("    - {:?}", x);
+                }
+            },
+            None => {
+                println!("  {:?}: Valid ./", typ);
+            },
+        }
+    }
+
 }
